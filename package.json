@@ -1,0 +1,29 @@
+{
+  "name": "github-packages-docker",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Build and publish Docker container images to GitHub Packages",
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "tsc",
+    "pack": "ncc build",
+    "all": "npm run build && npm run pack"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hanazuki/action-github-packages-docker"
+  },
+  "keywords": [
+    "actions",
+    "node"
+  ],
+  "dependencies": {
+    "@actions/core": "^1.2.3"
+  },
+  "devDependencies": {
+    "@types/jest": "^24.0.23",
+    "@types/node": "12",
+    "@zeit/ncc": "^0.20.5",
+    "typescript": "^3.6.4"
+  }
+}
