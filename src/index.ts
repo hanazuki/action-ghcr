@@ -1,54 +1,101 @@
+import * as cp from 'promisify-child-process';
+import {promises as fs} from 'fs';
+import * as os from 'os';
+import * as path from 'path';
 import * as core from '@actions/core'
-import {promisify} from 'util';
-const exec = promisify(require('child_process').exec);
 
 const SERVER = 'docker.pkg.github.com';
 
 type BuildConfig = {
-  build_context: string;
+  buildContext: string;
   file: string | null;
 };
 
 type PublishConfig = {
-  token: string;
+  repo: string;
   name: string;
   tag: string;
 };
 
+async function login(token: string): Promise<void> {
+  const login = cp.spawn('docker', ['login', SERVER, '-u', 'octocat', '--password-stdin'], {
+    stdio: ['pipe', 'inherit', 'inherit'],
+  });
+  const stdin = login.stdin;
+  if(stdin == null) {
+    throw 'BUG';
+  }
+  stdin.write(token);
+
+  await login;
+}
+
 async function build(config: BuildConfig): Promise<string> {
-  return "a";
+  const iidfile = path.join(await fs.mkdtemp(os.tmpdir() + path.sep), 'iidfile');
+
+  let args = [config.buildContext];
+  args.push('--iidfile', iidfile);
+
+  if(config.file) {
+    args.push('--file', config.file);
+  }
+
+  await cp.spawn('docker', args, {
+    stdio: ['ignore', 'inherit', 'inherit'],
+    env: {
+      DOCKER_BUILDKIT: '1',
+    },
+  });
+
+  return fs.readFile(iidfile, {encoding: 'ascii'});
 }
 
 async function publish(iid: string, config: PublishConfig): Promise<string> {
+  const fullName = `${SERVER}/${config.repo}/${config.name}:${config.tag}`;
 
+  await cp.spawn('docker', ['tag', iid, fullName], {
+    stdio: ['ignore', 'inherit', 'inherit'],
+  });
+  await cp.spawn('docker', ['push', fullName], {
+    stdio: ['ignore', 'inherit', 'inherit'],
+  });
+
+  return fullName;
 }
 
 async function run(): Promise<void> {
   const token = process.env['GITHUB_TOKEN'];
+  const repo = process.env['GITHUB_REPOSITORY'];
   const name = core.getInput('name', {required: true});
   const tag = presence(core.getInput('tag'));
-  const build_context = core.getInput('build_context', {required: true});
+  const buildContext = core.getInput('build_context', {required: true});
   const file = presence(core.getInput('file'));
 
-  if(tag !== null && token === null) {
-    throw 'tag is specified but GITHUB_TOKEN is not available';
+  if(repo == null) {
+    throw 'GITHUB_REPO is not available.';
   }
 
-  const image_id = await core.group(`Build ${name}`, () => build({
-    build_context: build_context,
+  if(tag != null) {
+    throw 'tag is specified but GITHUB_TOKEN is not available.';
+  }
+
+  const imageId = await core.group(`Build ${name}`, () => build({
+    buildContext: buildContext,
     file: file,
   }));
 
-  core.setOutput('image_id', image_id);
+  core.setOutput('image_id', imageId);
 
   if(tag !== null) {
-    const image_name = await core.group(`Publish ${name}:${tag}`, () => publish(image_id, {
-      token: token as string,
+    await core.group(`Login to GitHub Packages`, () => login(token as string));
+
+    const imageName = await core.group(`Publish ${name}:${tag}`, () => publish(imageId, {
+      repo: repo,
       name: name,
       tag: tag,
     }));
 
-    core.setOutput('image_name', image_name);
+    core.setOutput('image_name', imageName);
   }
 }
 
