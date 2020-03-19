@@ -35,8 +35,8 @@ jobs:
           *) exit 1 ;;
         esac
 
-        git config user.email 'github-automation@exapi.co'
-        git config user.name 'Automation'
+        git config user.email 'github-actions@exapi.co'
+        git config user.name 'GitHub Actions'
         git config credential.https://github.com/.helper '! f() { echo username=x-access-token; echo password=$GITHUB_TOKEN; };f'
 
         if git fetch --depth=1 origin "$deploy_branch"; then
