@@ -619,7 +619,6 @@ async function run() {
     }));
     core.info(`Image built as ${imageId}`);
     core.setOutput('image_id', imageId);
-    core.info(`tag: ${JSON.stringify(tag)}`);
     if (tag != null) {
         const imageName = await core.group(`Publish ${name}:${tag}`, () => publish(imageId, {
             repo: repo,
