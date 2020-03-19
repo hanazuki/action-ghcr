@@ -605,8 +605,13 @@ async function run() {
     if (repo == null) {
         throw 'GITHUB_REPO is not available.';
     }
-    if (tag != null) {
-        throw 'tag is specified but GITHUB_TOKEN is not available.';
+    if (token != null) {
+        await core.group(`Login to GitHub Packages`, () => login(token));
+    }
+    else {
+        if (tag != null) {
+            throw 'tag is specified but GITHUB_TOKEN is not available.';
+        }
     }
     const imageId = await core.group(`Build ${name}`, () => build({
         buildContext: buildContext,
@@ -614,7 +619,6 @@ async function run() {
     }));
     core.setOutput('image_id', imageId);
     if (tag !== null) {
-        await core.group(`Login to GitHub Packages`, () => login(token));
         const imageName = await core.group(`Publish ${name}:${tag}`, () => publish(imageId, {
             repo: repo,
             name: name,
