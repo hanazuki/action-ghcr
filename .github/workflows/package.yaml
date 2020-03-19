@@ -24,7 +24,7 @@ jobs:
     - name: Build
       run: |
         npm run build && npm run pack
-    - name: Deploy
+    - name: Publish
       env:
         GITHUB_TOKEN: ${{github.token}}
       run: |
