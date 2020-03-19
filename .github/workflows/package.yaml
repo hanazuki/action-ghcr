@@ -35,6 +35,10 @@ jobs:
           *) exit 1 ;;
         esac
 
+        git config user.email 'github-automation@exapi.co'
+        git config user.name 'Automation'
+        git config credential.https://github.com/.helper '! f() { echo username=x-access-token; echo password=$GITHUB_TOKEN; };f'
+
         if git fetch --depth=1 origin "$deploy_branch"; then
           git worktree add -f -b "$deploy_branch" publish FETCH_HEAD
           cd publish
@@ -44,10 +48,6 @@ jobs:
           git checkout --orphan "$deploy_branch"
           git rm -rf .
         fi
-
-        git config user.email 'github-automation@exapi.co'
-        git config user.name 'Automation'
-        git config credential.https://github.com/.helper '! f() { echo username=x-access-token; echo password=$GITHUB_TOKEN; };f'
 
         rsync -av --delete ../{action.yml,dist} ./
 
