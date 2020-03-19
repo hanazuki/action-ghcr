@@ -52,5 +52,5 @@ jobs:
         rsync -av --delete ../{action.yml,dist} ./
 
         git add -A
-        git commit --allow-empty -m 'Update package' -m "Built from ${GITHUB_SHA}"
+        git commit --allow-empty -m 'Update package' -m "Built-From: ${GITHUB_SHA}"
         git push origin "$deploy_branch"
