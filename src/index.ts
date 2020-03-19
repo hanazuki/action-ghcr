@@ -40,7 +40,7 @@ async function build(config: BuildConfig): Promise<string> {
     args.push('--file', config.file);
   }
 
-  await cp.spawn('docker', args, {
+  await cp.spawn('docker', ['build', ...args], {
     stdio: ['ignore', 'inherit', 'inherit'],
     env: {
       DOCKER_BUILDKIT: '1',
