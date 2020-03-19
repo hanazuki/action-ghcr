@@ -51,7 +51,7 @@ jobs:
           git rm -rf .
         fi
 
-        rsync -Rav --delete ../{action.yml,dist,.github/workflows/tag.yaml} ./
+        (cd ..; rsync -Rav --delete {action.yml,dist,.github/workflows/tag.yaml} ./publish/)
 
         git add -A
         git commit --allow-empty -m "$subject" -m "Built-From: ${GITHUB_SHA}"
