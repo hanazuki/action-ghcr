@@ -1,0 +1,31 @@
+name: Update tag
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  tag:
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v1
+    - name: Ensure packaged tree
+      run: |
+        test -d dist || {
+          echo "::error::Not a packaged tree"
+          exit 1
+        }
+    - name: Update tag
+      env:
+        GITHUB_TOKEN: ${{github.token}}
+      run: |
+        version=${GITHUB_REF#refs/tags/v}
+        major=${version%%.*}
+
+        git config user.email 'github-actions@exapi.co'
+        git config user.name 'GitHub Actions'
+        git config credential.https://github.com/.helper '! f() { echo username=x-access-token; echo password=$GITHUB_TOKEN; };f'
+
+        git tag -f "v${major}"
+        git push origin --tags
