@@ -39,6 +39,8 @@ jobs:
         git config user.name 'GitHub Actions'
         git config credential.https://github.com/.helper '! f() { echo username=x-access-token; echo password=$GITHUB_TOKEN; };f'
 
+        subject=$(git show --no-patch --pretty='format:%s')
+
         if git fetch --depth=1 origin "$deploy_branch"; then
           git worktree add -f -b "$deploy_branch" publish FETCH_HEAD
           cd publish
@@ -52,5 +54,5 @@ jobs:
         rsync -Rav --delete ../{action.yml,dist,.github/workflows/tag.yaml} ./
 
         git add -A
-        git commit --allow-empty -m 'Update package' -m "Built-From: ${GITHUB_SHA}"
+        git commit --allow-empty -m "$subject" -m "Built-From: ${GITHUB_SHA}"
         git push origin "$deploy_branch"
