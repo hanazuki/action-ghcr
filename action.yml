@@ -1,0 +1,22 @@
+name: github-packags-docker
+description: Build and publish Docker container images to GitHub Packages
+author: Kasumi Hanazuki <kasumi@rollingapple.net>
+inputs:
+  name:
+    description: Name of the container image
+    required: true
+  tag:
+    description: Name of the tag (image won't get published if not specified)
+    required: false
+  build_context:
+    description: Path to the build context
+    required: true
+  file:
+    description: Path to Dockerfile
+    required: false
+outputs:
+  image_id:
+    description: ID of the built image
+runs:
+  using: node12
+  main: dist/index.js
