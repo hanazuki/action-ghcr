@@ -577,7 +577,7 @@ async function build(config) {
     if (config.file) {
         args.push('--file', config.file);
     }
-    await cp.spawn('docker', args, {
+    await cp.spawn('docker', ['build', ...args], {
         stdio: ['ignore', 'inherit', 'inherit'],
         env: {
             DOCKER_BUILDKIT: '1',
