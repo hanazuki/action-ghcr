@@ -49,7 +49,7 @@ jobs:
           git rm -rf .
         fi
 
-        rsync -av --delete ../{action.yml,dist} ./
+        rsync -Rav --delete ../{action.yml,dist,.github/workflows/tag.yaml} ./
 
         git add -A
         git commit --allow-empty -m 'Update package' -m "Built-From: ${GITHUB_SHA}"
