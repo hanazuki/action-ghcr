@@ -631,7 +631,7 @@ async function run() {
     }
 }
 function presence(val) {
-    return val === '' ? val : null;
+    return val === '' ? null : val;
 }
 run().catch(e => core.setFailed(e.message));
 
