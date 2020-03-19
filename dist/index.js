@@ -617,13 +617,15 @@ async function run() {
         buildContext: buildContext,
         file: file,
     }));
+    core.info(`Image built as ${imageId}`);
     core.setOutput('image_id', imageId);
-    if (tag !== null) {
+    if (tag != null) {
         const imageName = await core.group(`Publish ${name}:${tag}`, () => publish(imageId, {
             repo: repo,
             name: name,
             tag: tag,
         }));
+        core.info(`Image published as ${imageName}`);
         core.setOutput('image_name', imageName);
     }
 }
