@@ -25,7 +25,7 @@ async function login(token: string): Promise<void> {
   if(stdin == null) {
     throw 'BUG';
   }
-  stdin.write(token);
+  stdin.end(token);
 
   await login;
 }
