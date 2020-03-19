@@ -1,0 +1,48 @@
+name: Package
+
+on:
+  push:
+    branches:
+      - master
+jobs:
+  package:
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions/setup-node@v1
+      with:
+        node-version: 12
+    - name: Install
+      run: |
+        npm install
+    - name: Build
+      run: |
+        npm run build && npm run pack
+    - name: Deploy
+      env:
+        GITHUB_TOKEN: ${{github.token}}
+      run: |
+        case "$GITHUB_REF" in
+          refs/heads/master) deploy_branch=latest ;;
+          *) exit 1 ;;
+        esac
+
+        if git fetch --depth=1 origin "$deploy_branch"; then
+          git worktree add -f -b "$deploy_branch" publish FETCH_HEAD
+          cd publish
+        else
+          git worktree add -f --detach publish
+          cd publish
+          git checkout --orphan "$deploy_branch"
+          git rm -rf .
+        fi
+
+        git config user.email 'github-automation@exapi.co'
+        git config user.name 'Automation'
+        git config credential.https://github.com/.helper '! f() { echo username=x-access-token; echo password=$GITHUB_TOKEN; };f'
+
+        rsync -av --delete ../{action.yml,dist} ./
+
+        git add -A
+        git commit -m 'Update package' -m "Built from ${GITHUB_SHA}"
+        git push origin "$deploy_branch"
