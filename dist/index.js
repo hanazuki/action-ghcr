@@ -567,7 +567,7 @@ async function login(token) {
     if (stdin == null) {
         throw 'BUG';
     }
-    stdin.write(token);
+    stdin.end(token);
     await login;
 }
 async function build(config) {
