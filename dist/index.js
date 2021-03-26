@@ -555,7 +555,7 @@ async function run() {
 function presence(val) {
     return val === '' ? null : val;
 }
-run().catch(e => core.setFailed(e.message));
+run().catch(e => core.setFailed(e.message ? e.message : e));
 
 
 /***/ }),
