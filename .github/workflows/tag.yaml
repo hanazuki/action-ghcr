@@ -25,4 +25,4 @@ jobs:
         git config user.name 'automate'
 
         git tag -f "v${major}"
-        git push origin --tags
+        git push origin -f --tags
