@@ -10,7 +10,8 @@ inputs:
     required: false
   build_context:
     description: Path to the build context
-    required: true
+    deafult: .
+    required: false
   file:
     description: Path to Dockerfile
     required: false

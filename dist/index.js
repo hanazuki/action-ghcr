@@ -480,7 +480,7 @@ const fs_1 = __webpack_require__(747);
 const os = __importStar(__webpack_require__(87));
 const path = __importStar(__webpack_require__(622));
 const core = __importStar(__webpack_require__(470));
-const SERVER = 'docker.pkg.github.com';
+const SERVER = 'ghcr.io';
 async function login(token) {
     const login = cp.spawn('docker', ['login', SERVER, '-u', 'octocat', '--password-stdin'], {
         stdio: ['pipe', 'inherit', 'inherit'],
