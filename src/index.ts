@@ -1,5 +1,5 @@
 import * as cp from 'promisify-child-process';
-import {promises as fs} from 'fs';
+import { promises as fs } from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import * as core from '@actions/core'
@@ -22,7 +22,7 @@ async function login(token: string): Promise<void> {
     stdio: ['pipe', 'inherit', 'inherit'],
   });
   const stdin = login.stdin;
-  if(stdin == null) {
+  if (stdin == null) {
     throw 'BUG';
   }
   stdin.end(token);
@@ -36,7 +36,7 @@ async function build(config: BuildConfig): Promise<string> {
   let args = [config.buildContext];
   args.push('--iidfile', iidfile);
 
-  if(config.file) {
+  if (config.file) {
     args.push('--file', config.file);
   }
 
@@ -47,7 +47,7 @@ async function build(config: BuildConfig): Promise<string> {
     },
   });
 
-  return fs.readFile(iidfile, {encoding: 'ascii'});
+  return fs.readFile(iidfile, { encoding: 'ascii' });
 }
 
 async function publish(iid: string, config: PublishConfig): Promise<string> {
@@ -66,19 +66,19 @@ async function publish(iid: string, config: PublishConfig): Promise<string> {
 async function run(): Promise<void> {
   const token = process.env['GITHUB_TOKEN'];
   const repo = process.env['GITHUB_REPOSITORY'];
-  const name = core.getInput('name', {required: true});
+  const name = core.getInput('name', { required: true });
   const tag = presence(core.getInput('tag'));
-  const buildContext = core.getInput('build_context', {required: true});
+  const buildContext = core.getInput('build_context', { required: true });
   const file = presence(core.getInput('file'));
 
-  if(repo == null) {
+  if (repo == null) {
     throw 'GITHUB_REPO is not available.';
   }
 
-  if(token != null) {
+  if (token != null) {
     await core.group(`Login to GitHub Packages`, () => login(token));
   } else {
-    if(tag != null) {
+    if (tag != null) {
       throw 'tag is specified but GITHUB_TOKEN is not available.';
     }
   }
@@ -91,7 +91,7 @@ async function run(): Promise<void> {
   core.info(`Image built as ${imageId}`);
   core.setOutput('image_id', imageId);
 
-  if(tag != null) {
+  if (tag != null) {
     const imageName = await core.group(`Publish ${name}:${tag}`, () => publish(imageId, {
       repo: repo,
       name: name,
