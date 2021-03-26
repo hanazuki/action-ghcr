@@ -1,0 +1,3 @@
+- Once a commit is pushed to the `master` branch, GitHub Actions builds the code and pushes the artifact to the `latest` branch.
+- To release a new version tag the head of the `latest` branch like `v1.1.1`.
+- GitHub Actions will move the `v1` tag so that it points to the same commit as `v1.1.1`.
