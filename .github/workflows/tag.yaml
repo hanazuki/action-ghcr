@@ -7,9 +7,9 @@ on:
 
 jobs:
   tag:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - name: Ensure packaged tree
       run: |
         test -d dist || {
@@ -17,15 +17,12 @@ jobs:
           exit 1
         }
     - name: Update tag
-      env:
-        GITHUB_TOKEN: ${{github.token}}
       run: |
         version=${GITHUB_REF#refs/tags/v}
         major=${version%%.*}
 
-        git config user.email 'github-actions@exapi.co'
-        git config user.name 'GitHub Actions'
-        git config credential.https://github.com/.helper '! f() { echo username=x-access-token; echo password=$GITHUB_TOKEN; };f'
+        git config user.email 'automate@hanazuki.dev'
+        git config user.name 'automate'
 
         git tag -f "v${major}"
         git push origin --tags

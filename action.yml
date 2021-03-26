@@ -14,6 +14,10 @@ inputs:
   file:
     description: Path to Dockerfile
     required: false
+  platforms:
+    description: List of platforms to build image (comma-delimited)
+    default: linux/amd64
+    required: false
 outputs:
   image_id:
     description: ID of the built image

@@ -7,9 +7,9 @@ on:
 
 jobs:
   package:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - uses: actions/setup-node@v1
       with:
         node-version: 12
@@ -27,17 +27,14 @@ jobs:
         npm run build && npm run pack
     - name: Publish
       if: github.ref == 'refs/heads/master'
-      env:
-        GITHUB_TOKEN: ${{github.token}}
       run: |
         case "$GITHUB_REF" in
           refs/heads/master) deploy_branch=latest ;;
           *) exit 1 ;;
         esac
 
-        git config user.email 'github-actions@exapi.co'
-        git config user.name 'GitHub Actions'
-        git config credential.https://github.com/.helper '! f() { echo username=x-access-token; echo password=$GITHUB_TOKEN; };f'
+        git config user.email 'automate@hanazuki.dev'
+        git config user.name 'automate'
 
         subject=$(git show --no-patch --pretty='format:%s')
 
