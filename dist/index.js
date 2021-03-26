@@ -43,6 +43,32 @@ module.exports =
 /************************************************************************/
 /******/ ({
 
+/***/ 82:
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+// We use any as a valid input type
+/* eslint-disable @typescript-eslint/no-explicit-any */
+Object.defineProperty(exports, "__esModule", { value: true });
+/**
+ * Sanitizes an input into a string so it can be passed into issueCommand safely
+ * @param input input to sanitize into a string
+ */
+function toCommandValue(input) {
+    if (input === null || input === undefined) {
+        return '';
+    }
+    else if (typeof input === 'string' || input instanceof String) {
+        return input;
+    }
+    return JSON.stringify(input);
+}
+exports.toCommandValue = toCommandValue;
+//# sourceMappingURL=utils.js.map
+
+/***/ }),
+
 /***/ 87:
 /***/ (function(module) {
 
@@ -50,192 +76,46 @@ module.exports = require("os");
 
 /***/ }),
 
-/***/ 129:
-/***/ (function(module) {
-
-module.exports = require("child_process");
-
-/***/ }),
-
-/***/ 335:
+/***/ 102:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
 
-
-var _interopRequireDefault = __webpack_require__(764);
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.promisifyChildProcess = promisifyChildProcess;
-exports.spawn = spawn;
-exports.fork = fork;
-exports.execFile = exports.exec = void 0;
-
-var _child_process = _interopRequireDefault(__webpack_require__(129));
-
-function joinChunks(chunks, encoding) {
-  if (chunks[0] instanceof Buffer) {
-    var buffer = Buffer.concat(chunks);
-    if (encoding) return buffer.toString(encoding);
-    return buffer;
-  }
-
-  return chunks.join('');
-}
-
-function promisifyChildProcess(child) {
-  var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-
-  var _promise = new Promise(function (resolve, reject) {
-    var encoding = options.encoding,
-        killSignal = options.killSignal;
-    var captureStdio = encoding != null || options.maxBuffer != null;
-    var maxBuffer = options.maxBuffer || 200 * 1024;
-    var error;
-    var bufferSize = 0;
-    var stdoutChunks = [];
-    var stderrChunks = [];
-
-    var capture = function capture(chunks) {
-      return function (data) {
-        var remaining = maxBuffer - bufferSize;
-
-        if (data.length > remaining) {
-          error = new Error("maxBuffer size exceeded"); // $FlowFixMe
-
-          child.kill(killSignal ? killSignal : 'SIGTERM');
-          data = data.slice(0, remaining);
-        }
-
-        bufferSize += data.length;
-        chunks.push(data);
-      };
-    };
-
-    if (captureStdio) {
-      if (child.stdout) child.stdout.on('data', capture(stdoutChunks));
-      if (child.stderr) child.stderr.on('data', capture(stderrChunks));
+// For internal use, subject to change.
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+// We use any as a valid input type
+/* eslint-disable @typescript-eslint/no-explicit-any */
+const fs = __importStar(__webpack_require__(747));
+const os = __importStar(__webpack_require__(87));
+const utils_1 = __webpack_require__(82);
+function issueCommand(command, message) {
+    const filePath = process.env[`GITHUB_${command}`];
+    if (!filePath) {
+        throw new Error(`Unable to find environment variable for file command ${command}`);
     }
-
-    child.on('error', reject);
-
-    function done(code, signal) {
-      if (!error) {
-        if (code != null && code !== 0) {
-          error = new Error("Process exited with code ".concat(code));
-        } else if (signal != null) {
-          error = new Error("Process was killed with ".concat(signal));
-        }
-      }
-
-      function defineOutputs(obj) {
-        if (captureStdio) {
-          obj.stdout = joinChunks(stdoutChunks, encoding);
-          obj.stderr = joinChunks(stderrChunks, encoding);
-        } else {
-          /* eslint-disable no-console */
-          Object.defineProperties(obj, {
-            stdout: {
-              configurable: true,
-              enumerable: true,
-              get: function get() {
-                console.error(new Error("To get stdout from a spawned or forked process, set the `encoding` or `maxBuffer` option").stack.replace(/^Error/, 'Warning'));
-                return null;
-              }
-            },
-            stderr: {
-              configurable: true,
-              enumerable: true,
-              get: function get() {
-                console.error(new Error("To get stderr from a spawned or forked process, set the `encoding` or `maxBuffer` option").stack.replace(/^Error/, 'Warning'));
-                return null;
-              }
-            }
-          });
-          /* eslint-enable no-console */
-        }
-      }
-
-      var output = {};
-      defineOutputs(output);
-      var finalError = error;
-
-      if (finalError) {
-        finalError.code = code;
-        finalError.signal = signal;
-        defineOutputs(finalError);
-        reject(finalError);
-      } else {
-        resolve(output);
-      }
+    if (!fs.existsSync(filePath)) {
+        throw new Error(`Missing file at path: ${filePath}`);
     }
-
-    child.on('close', done);
-    child.on('exit', done);
-  });
-
-  return Object.create(child, {
-    then: {
-      value: _promise.then.bind(_promise)
-    },
-    catch: {
-      value: _promise.catch.bind(_promise)
-    }
-  });
-}
-
-function spawn(command, args, options) {
-  return promisifyChildProcess(_child_process.default.spawn(command, args, options), Array.isArray(args) ? options : args);
-}
-
-function fork(module, args, options) {
-  return promisifyChildProcess(_child_process.default.fork(module, args, options), Array.isArray(args) ? options : args);
-}
-
-function promisifyExecMethod(method) {
-  return function () {
-    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-      args[_key] = arguments[_key];
-    }
-
-    var child;
-
-    var _promise = new Promise(function (resolve, reject) {
-      child = method.apply(void 0, args.concat([function (err, stdout, stderr) {
-        if (err) {
-          err.stdout = stdout;
-          err.stderr = stderr;
-          reject(err);
-        } else {
-          resolve({
-            stdout: stdout,
-            stderr: stderr
-          });
-        }
-      }]));
+    fs.appendFileSync(filePath, `${utils_1.toCommandValue(message)}${os.EOL}`, {
+        encoding: 'utf8'
     });
-
-    if (!child) {
-      throw new Error('unexpected error: child has not been initialized');
-    }
-
-    return Object.create(child, {
-      then: {
-        value: _promise.then.bind(_promise)
-      },
-      catch: {
-        value: _promise.catch.bind(_promise)
-      }
-    });
-  };
 }
+exports.issueCommand = issueCommand;
+//# sourceMappingURL=file-command.js.map
 
-var exec = promisifyExecMethod(_child_process.default.exec);
-exports.exec = exec;
-var execFile = promisifyExecMethod(_child_process.default.execFile);
-exports.execFile = execFile;
+/***/ }),
+
+/***/ 129:
+/***/ (function(module) {
+
+module.exports = require("child_process");
 
 /***/ }),
 
@@ -253,6 +133,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const os = __importStar(__webpack_require__(87));
+const utils_1 = __webpack_require__(82);
 /**
  * Commands
  *
@@ -307,13 +188,13 @@ class Command {
     }
 }
 function escapeData(s) {
-    return (s || '')
+    return utils_1.toCommandValue(s)
         .replace(/%/g, '%25')
         .replace(/\r/g, '%0D')
         .replace(/\n/g, '%0A');
 }
 function escapeProperty(s) {
-    return (s || '')
+    return utils_1.toCommandValue(s)
         .replace(/%/g, '%25')
         .replace(/\r/g, '%0D')
         .replace(/\n/g, '%0A')
@@ -347,6 +228,8 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const command_1 = __webpack_require__(431);
+const file_command_1 = __webpack_require__(102);
+const utils_1 = __webpack_require__(82);
 const os = __importStar(__webpack_require__(87));
 const path = __importStar(__webpack_require__(622));
 /**
@@ -369,11 +252,21 @@ var ExitCode;
 /**
  * Sets env variable for this action and future actions in the job
  * @param name the name of the variable to set
- * @param val the value of the variable
+ * @param val the value of the variable. Non-string values will be converted to a string via JSON.stringify
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function exportVariable(name, val) {
-    process.env[name] = val;
-    command_1.issueCommand('set-env', { name }, val);
+    const convertedVal = utils_1.toCommandValue(val);
+    process.env[name] = convertedVal;
+    const filePath = process.env['GITHUB_ENV'] || '';
+    if (filePath) {
+        const delimiter = '_GitHubActionsFileCommandDelimeter_';
+        const commandValue = `${name}<<${delimiter}${os.EOL}${convertedVal}${os.EOL}${delimiter}`;
+        file_command_1.issueCommand('ENV', commandValue);
+    }
+    else {
+        command_1.issueCommand('set-env', { name }, convertedVal);
+    }
 }
 exports.exportVariable = exportVariable;
 /**
@@ -389,7 +282,13 @@ exports.setSecret = setSecret;
  * @param inputPath
  */
 function addPath(inputPath) {
-    command_1.issueCommand('add-path', {}, inputPath);
+    const filePath = process.env['GITHUB_PATH'] || '';
+    if (filePath) {
+        file_command_1.issueCommand('PATH', inputPath);
+    }
+    else {
+        command_1.issueCommand('add-path', {}, inputPath);
+    }
     process.env['PATH'] = `${inputPath}${path.delimiter}${process.env['PATH']}`;
 }
 exports.addPath = addPath;
@@ -412,12 +311,22 @@ exports.getInput = getInput;
  * Sets the value of an output.
  *
  * @param     name     name of the output to set
- * @param     value    value to store
+ * @param     value    value to store. Non-string values will be converted to a string via JSON.stringify
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function setOutput(name, value) {
     command_1.issueCommand('set-output', { name }, value);
 }
 exports.setOutput = setOutput;
+/**
+ * Enables or disables the echoing of commands into stdout for the rest of the step.
+ * Echoing is disabled by default if ACTIONS_STEP_DEBUG is not set.
+ *
+ */
+function setCommandEcho(enabled) {
+    command_1.issue('echo', enabled ? 'on' : 'off');
+}
+exports.setCommandEcho = setCommandEcho;
 //-----------------------------------------------------------------------
 // Results
 //-----------------------------------------------------------------------
@@ -451,18 +360,18 @@ function debug(message) {
 exports.debug = debug;
 /**
  * Adds an error issue
- * @param message error issue message
+ * @param message error issue message. Errors will be converted to string via toString()
  */
 function error(message) {
-    command_1.issue('error', message);
+    command_1.issue('error', message instanceof Error ? message.toString() : message);
 }
 exports.error = error;
 /**
  * Adds an warning issue
- * @param message warning issue message
+ * @param message warning issue message. Errors will be converted to string via toString()
  */
 function warning(message) {
-    command_1.issue('warning', message);
+    command_1.issue('warning', message instanceof Error ? message.toString() : message);
 }
 exports.warning = warning;
 /**
@@ -520,8 +429,9 @@ exports.group = group;
  * Saves state for current action, the state can only be retrieved by this action's post job execution.
  *
  * @param     name     name of the state to store
- * @param     value    value to store
+ * @param     value    value to store. Non-string values will be converted to a string via JSON.stringify
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function saveState(name, value) {
     command_1.issueCommand('save-state', { name }, value);
 }
@@ -545,15 +455,27 @@ exports.getState = getState;
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
 var __importStar = (this && this.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const cp = __importStar(__webpack_require__(335));
+const cp = __importStar(__webpack_require__(612));
 const fs_1 = __webpack_require__(747);
 const os = __importStar(__webpack_require__(87));
 const path = __importStar(__webpack_require__(622));
@@ -637,6 +559,197 @@ run().catch(e => core.setFailed(e.message));
 
 /***/ }),
 
+/***/ 612:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.promisifyChildProcess = promisifyChildProcess;
+exports.spawn = spawn;
+exports.fork = fork;
+exports.execFile = exports.exec = void 0;
+
+const child_process = __webpack_require__(129);
+
+const bindFinally = promise => (handler // don't assume we're running in an environment with Promise.finally
+) => promise.then(async value => {
+  await handler();
+  return value;
+}, async reason => {
+  await handler();
+  throw reason;
+});
+
+function joinChunks(chunks, encoding) {
+  if (chunks[0] instanceof Buffer) {
+    const buffer = Buffer.concat(chunks);
+    if (encoding) return buffer.toString(encoding);
+    return buffer;
+  }
+
+  return chunks.join('');
+}
+
+function promisifyChildProcess(child, options = {}) {
+  const _promise = new Promise((resolve, reject) => {
+    const {
+      encoding,
+      killSignal
+    } = options;
+    const captureStdio = encoding != null || options.maxBuffer != null;
+    const maxBuffer = options.maxBuffer != null ? options.maxBuffer : 200 * 1024;
+    let error;
+    let bufferSize = 0;
+    const stdoutChunks = [];
+    const stderrChunks = [];
+
+    const capture = chunks => data => {
+      const remaining = Math.max(0, maxBuffer - bufferSize);
+      const byteLength = Buffer.byteLength(data, 'utf8');
+      bufferSize += Math.min(remaining, byteLength);
+
+      if (byteLength > remaining) {
+        error = new Error(`maxBuffer size exceeded`); // $FlowFixMe
+
+        child.kill(killSignal ? killSignal : 'SIGTERM');
+        data = data.slice(0, remaining);
+      }
+
+      chunks.push(data);
+    };
+
+    if (captureStdio) {
+      if (child.stdout) child.stdout.on('data', capture(stdoutChunks));
+      if (child.stderr) child.stderr.on('data', capture(stderrChunks));
+    }
+
+    child.on('error', reject);
+
+    function done(code, signal) {
+      if (!error) {
+        if (code != null && code !== 0) {
+          error = new Error(`Process exited with code ${code}`);
+        } else if (signal != null) {
+          error = new Error(`Process was killed with ${signal}`);
+        }
+      }
+
+      function defineOutputs(obj) {
+        obj.code = code;
+        obj.signal = signal;
+
+        if (captureStdio) {
+          obj.stdout = joinChunks(stdoutChunks, encoding);
+          obj.stderr = joinChunks(stderrChunks, encoding);
+        } else {
+          const warn = prop => ({
+            configurable: true,
+            enumerable: true,
+
+            get() {
+              /* eslint-disable no-console */
+              console.error(new Error(`To get ${prop} from a spawned or forked process, set the \`encoding\` or \`maxBuffer\` option`).stack.replace(/^Error/, 'Warning'));
+              /* eslint-enable no-console */
+
+              return null;
+            }
+
+          });
+
+          Object.defineProperties(obj, {
+            stdout: warn('stdout'),
+            stderr: warn('stderr')
+          });
+        }
+      }
+
+      const finalError = error;
+
+      if (finalError) {
+        defineOutputs(finalError);
+        reject(finalError);
+      } else {
+        const output = {};
+        defineOutputs(output);
+        resolve(output);
+      }
+    }
+
+    child.on('close', done);
+  });
+
+  return Object.create(child, {
+    then: {
+      value: _promise.then.bind(_promise)
+    },
+    catch: {
+      value: _promise.catch.bind(_promise)
+    },
+    finally: {
+      value: bindFinally(_promise)
+    }
+  });
+}
+
+function spawn(command, args, options) {
+  return promisifyChildProcess(child_process.spawn(command, args, options), Array.isArray(args) ? options : args);
+}
+
+function fork(module, args, options) {
+  return promisifyChildProcess(child_process.fork(module, args, options), Array.isArray(args) ? options : args);
+}
+
+function promisifyExecMethod(method) {
+  return (...args) => {
+    let child;
+
+    const _promise = new Promise((resolve, reject) => {
+      child = method(...args, (err, stdout, stderr) => {
+        if (err) {
+          err.stdout = stdout;
+          err.stderr = stderr;
+          reject(err);
+        } else {
+          resolve({
+            code: 0,
+            signal: null,
+            stdout,
+            stderr
+          });
+        }
+      });
+    });
+
+    if (!child) {
+      throw new Error('unexpected error: child has not been initialized');
+    }
+
+    return Object.create(child, {
+      then: {
+        value: _promise.then.bind(_promise)
+      },
+      catch: {
+        value: _promise.catch.bind(_promise)
+      },
+      finally: {
+        value: bindFinally(_promise)
+      }
+    });
+  };
+}
+
+const exec = promisifyExecMethod(child_process.exec);
+exports.exec = exec;
+const execFile = promisifyExecMethod(child_process.execFile);
+exports.execFile = execFile;
+
+
+/***/ }),
+
 /***/ 622:
 /***/ (function(module) {
 
@@ -648,19 +761,6 @@ module.exports = require("path");
 /***/ (function(module) {
 
 module.exports = require("fs");
-
-/***/ }),
-
-/***/ 764:
-/***/ (function(module) {
-
-function _interopRequireDefault(obj) {
-  return obj && obj.__esModule ? obj : {
-    "default": obj
-  };
-}
-
-module.exports = _interopRequireDefault;
 
 /***/ })
 
