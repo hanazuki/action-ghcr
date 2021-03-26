@@ -108,4 +108,4 @@ function presence(val: string): string | null {
   return val === '' ? null : val;
 }
 
-run().catch(e => core.setFailed(e.message));
+run().catch(e => core.setFailed(e.message ? e.message : e));
