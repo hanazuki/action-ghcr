@@ -4,7 +4,7 @@ import * as os from 'os';
 import * as path from 'path';
 import * as core from '@actions/core'
 
-const SERVER = 'docker.pkg.github.com';
+const SERVER = 'ghcr.io';
 
 type BuildConfig = {
   buildContext: string;
