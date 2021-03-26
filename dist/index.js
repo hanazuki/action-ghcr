@@ -508,7 +508,7 @@ async function build(config) {
     return fs_1.promises.readFile(iidfile, { encoding: 'ascii' });
 }
 async function publish(iid, config) {
-    const fullName = `${SERVER}/${config.repo}/${config.name}:${config.tag}`;
+    const fullName = `${SERVER}/${config.owner}/${config.name}:${config.tag}`;
     await cp.spawn('docker', ['tag', iid, fullName], {
         stdio: ['ignore', 'inherit', 'inherit'],
     });
@@ -527,6 +527,7 @@ async function run() {
     if (repo == null) {
         throw 'GITHUB_REPO is not available.';
     }
+    const owner = repo.split('/', 2)[0];
     if (token != null) {
         await core.group(`Login to GitHub Packages`, () => login(token));
     }
@@ -543,7 +544,7 @@ async function run() {
     core.setOutput('image_id', imageId);
     if (tag != null) {
         const imageName = await core.group(`Publish ${name}:${tag}`, () => publish(imageId, {
-            repo: repo,
+            owner: owner,
             name: name,
             tag: tag,
         }));
