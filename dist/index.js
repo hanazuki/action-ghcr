@@ -518,22 +518,18 @@ async function publish(iid, config) {
     return fullName;
 }
 async function run() {
-    const token = process.env['GITHUB_TOKEN'];
-    const repo = process.env['GITHUB_REPOSITORY'];
+    const token = presence(core.getInput('token', { required: true }));
+    const owner = core.getInput('owner', { required: true });
     const name = core.getInput('name', { required: true });
     const tag = presence(core.getInput('tag'));
     const buildContext = core.getInput('build_context', { required: true });
     const file = presence(core.getInput('file'));
-    if (repo == null) {
-        throw 'GITHUB_REPO is not available.';
-    }
-    const owner = repo.split('/', 2)[0];
     if (token != null) {
         await core.group(`Login to GitHub Packages`, () => login(token));
     }
     else {
         if (tag != null) {
-            throw 'tag is specified but GITHUB_TOKEN is not available.';
+            throw 'tag is specified but token is not available.';
         }
     }
     const imageId = await core.group(`Build ${name}`, () => build({

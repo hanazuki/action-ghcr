@@ -2,6 +2,12 @@ name: github-packags-docker
 description: Build and publish Docker container images to GitHub Packages
 author: Kasumi Hanazuki <kasumi@rollingapple.net>
 inputs:
+  token:
+    description: GitHub token used when pushing image to GHCR
+    default: ${{ github.token }}
+  owner:
+    description: Container registry owner
+    default: ${{ github.repository_owner }}
   name:
     description: Name of the container image
     required: true
